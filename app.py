@@ -80,6 +80,41 @@ def health_check():
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SERVICES_DIR = os.path.join(BASE_DIR, "services")
 
+# Modules the learning and interview services import (import name -> pip name in requirements.txt)
+SERVICE_MODULES = ["pgvector", "onnxruntime", "tokenizers", "numpy", "faster_whisper", "pypdf", "docx",
+                   "google.genai"]
+
+
+def ensure_service_packages():
+    """Installs requirements.txt when a service module is missing. The panel's own pip step downloads into
+    the container's small /tmp, and one large wheel (ctranslate2, 40 MB) failed with "No space left on
+    device", which aborts the whole install. Here the temporary files go on the data disk instead."""
+    import importlib
+    import shutil
+    import subprocess
+    missing = []
+    for module in SERVICE_MODULES:
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            missing.append(module)
+    if not missing:
+        return
+    logger.info(f"Installing packages for the services (missing: {', '.join(missing)})...")
+    tmp = os.path.join(BASE_DIR, ".tmp")
+    os.makedirs(tmp, exist_ok=True)
+    env = dict(os.environ, TMPDIR=tmp, PIP_NO_CACHE_DIR="1")
+    result = subprocess.run([sys.executable, "-m", "pip", "install", "--prefix", os.path.join(BASE_DIR, ".local"),
+                             "-r", os.path.join(BASE_DIR, "requirements.txt")], env=env)
+    shutil.rmtree(tmp, ignore_errors=True)
+    importlib.invalidate_caches()
+    if result.returncode:
+        logger.warning(f"pip install failed (exit {result.returncode}); the learning and interview services "
+                       "will keep restarting until their packages are installed")
+
+
+ensure_service_packages()
+
 logger.info(f"Base Directory: {BASE_DIR}")
 logger.info(f"Services Directory: {SERVICES_DIR}")
 
