@@ -24,6 +24,10 @@ export MODEL_HOST_KEY="$(cat "$KEY_FILE")"
 pids=()
 trap 'kill ${pids[@]} 2>/dev/null; echo "Stopped."' EXIT INT TERM
 
+# Keep the Mac awake while serving: if it sleeps, the tunnel drops and the site loses its LLM
+caffeinate -ims -w $$ &
+pids+=($!)
+
 wait_for() {  # port, name
   for i in {1..120}; do lsof -iTCP:$1 -sTCP:LISTEN >/dev/null 2>&1 && return 0; sleep 1; done
   echo "$2 did not start (see $LOGS)"; exit 1
