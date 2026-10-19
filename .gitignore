@@ -36,3 +36,6 @@ out/
 *.safetensors
 
 .tmp/
+
+# Whisper model for STT_PROVIDER=local (plain files: the Hugging Face cache uses links the server cannot resolve)
+services/interview-service/models/whisper-small.en/

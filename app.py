@@ -98,6 +98,13 @@ def ensure_service_packages():
             importlib.import_module(module)
         except ImportError:
             missing.append(module)
+    # Installed but incompatible: PyAV 19 broke faster-whisper's audio decoding (requirements.txt pins <19)
+    try:
+        import av
+        if int(av.__version__.split(".")[0]) >= 19:
+            missing.append(f"av<19 (found {av.__version__})")
+    except ImportError:
+        pass
     if not missing:
         return
     logger.info(f"Installing packages for the services (missing: {', '.join(missing)})...")
