@@ -1,0 +1,241 @@
+{
+  "schema_version": "1.0",
+  "message_id": "MSG-C01-FIXTURE-001",
+  "generated_at": "2026-10-17T20:00:00Z",
+  "source_component": "Job-market-intelligence-engine",
+  "profile_type": "aggregated_role_profile",
+  "data": {
+    "industry_role_profile": {
+      "role_id": "RL-000003",
+      "candidate_role_id": null,
+      "primary_observed_title": "Software Testing Intern",
+      "observed_titles": [
+        "Software Testing Intern",
+        "QA Intern",
+        "Software Tester Intern"
+      ],
+      "mapping_status": "verified",
+      "profile_status": "active",
+      "domain": {
+        "domain_id": "DOM-IT",
+        "domain_name": "Information Technology"
+      },
+      "career_level": "INTERNSHIP",
+      "profile_version": "2026-10-17T20:00:00Z",
+      "market_evidence": {
+        "job_posting_count": 24,
+        "observation_period": {
+          "from": "2026-07-01",
+          "to": "2026-10-15"
+        }
+      },
+      "requirements": [
+        {
+          "skill_id": "SK-000263",
+          "candidate_skill_id": null,
+          "standard_name": "plan software testing",
+          "primary_observed_term": "plan software testing",
+          "observed_terms": [
+            "plan software testing",
+            "software test planning"
+          ],
+          "mapping_status": "verified",
+          "skill_type": "TECHNICAL",
+          "required_proficiency": {
+            "level": "BEGINNER",
+            "score": 0.45
+          },
+          "demand_evidence": {
+            "job_ads_containing_skill": 16,
+            "frequency": 0.667,
+            "required_count": 10,
+            "preferred_count": 4,
+            "mentioned_count": 2
+          },
+          "demand_weight": 0.82,
+          "sample_evidence": [
+            {
+              "source_id": "SYNTH-SK-000263-01",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-10",
+              "text_excerpt": "Assist with planning test cases and test activities."
+            },
+            {
+              "source_id": "SYNTH-SK-000263-02",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-12",
+              "text_excerpt": "Prepare basic test plans for a web application."
+            }
+          ],
+          "required_proficiency_score": 0.45
+        },
+        {
+          "skill_id": "SK-000389",
+          "candidate_skill_id": null,
+          "standard_name": "levels of software testing",
+          "primary_observed_term": "levels of software testing",
+          "observed_terms": [
+            "levels of software testing",
+            "software testing levels"
+          ],
+          "mapping_status": "verified",
+          "skill_type": "KNOWLEDGE",
+          "required_proficiency": {
+            "level": "BEGINNER",
+            "score": 0.45
+          },
+          "demand_evidence": {
+            "job_ads_containing_skill": 13,
+            "frequency": 0.542,
+            "required_count": 6,
+            "preferred_count": 5,
+            "mentioned_count": 2
+          },
+          "demand_weight": 0.7,
+          "sample_evidence": [
+            {
+              "source_id": "SYNTH-SK-000389-01",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-10",
+              "text_excerpt": "Understand unit, integration and system testing."
+            },
+            {
+              "source_id": "SYNTH-SK-000389-02",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-12",
+              "text_excerpt": "Describe appropriate testing levels for application features."
+            }
+          ],
+          "required_proficiency_score": 0.45
+        },
+        {
+          "skill_id": "SK-000353",
+          "candidate_skill_id": null,
+          "standard_name": "provide software testing documentation",
+          "primary_observed_term": "software testing documentation",
+          "observed_terms": [
+            "software testing documentation",
+            "test documentation"
+          ],
+          "mapping_status": "verified",
+          "skill_type": "TECHNICAL",
+          "required_proficiency": {
+            "level": "BEGINNER",
+            "score": 0.45
+          },
+          "demand_evidence": {
+            "job_ads_containing_skill": 12,
+            "frequency": 0.5,
+            "required_count": 7,
+            "preferred_count": 3,
+            "mentioned_count": 2
+          },
+          "demand_weight": 0.68,
+          "sample_evidence": [
+            {
+              "source_id": "SYNTH-SK-000353-01",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-10",
+              "text_excerpt": "Document test results and reproducible defects."
+            },
+            {
+              "source_id": "SYNTH-SK-000353-02",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-12",
+              "text_excerpt": "Maintain clear test evidence and defect notes."
+            }
+          ],
+          "required_proficiency_score": 0.45
+        },
+        {
+          "skill_id": "SK-000591",
+          "candidate_skill_id": null,
+          "standard_name": "Python (computer programming)",
+          "primary_observed_term": "Python",
+          "observed_terms": [
+            "Python",
+            "Python programming"
+          ],
+          "mapping_status": "verified",
+          "skill_type": "TECHNICAL",
+          "required_proficiency": {
+            "level": "BEGINNER",
+            "score": 0.4
+          },
+          "demand_evidence": {
+            "job_ads_containing_skill": 9,
+            "frequency": 0.375,
+            "required_count": 4,
+            "preferred_count": 3,
+            "mentioned_count": 2
+          },
+          "demand_weight": 0.54,
+          "sample_evidence": [
+            {
+              "source_id": "SYNTH-SK-000591-01",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-10",
+              "text_excerpt": "Use Python for small testing utilities."
+            },
+            {
+              "source_id": "SYNTH-SK-000591-02",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-12",
+              "text_excerpt": "Write a basic script to support test execution."
+            }
+          ],
+          "required_proficiency_score": 0.4
+        },
+        {
+          "skill_id": "SK-000919",
+          "candidate_skill_id": null,
+          "standard_name": "Structured query language SQL",
+          "primary_observed_term": "SQL",
+          "observed_terms": [
+            "SQL",
+            "Structured Query Language"
+          ],
+          "mapping_status": "verified",
+          "skill_type": "TECHNICAL",
+          "required_proficiency": {
+            "level": "BEGINNER",
+            "score": 0.4
+          },
+          "demand_evidence": {
+            "job_ads_containing_skill": 8,
+            "frequency": 0.333,
+            "required_count": 4,
+            "preferred_count": 2,
+            "mentioned_count": 2
+          },
+          "demand_weight": 0.48,
+          "sample_evidence": [
+            {
+              "source_id": "SYNTH-SK-000919-01",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-10",
+              "text_excerpt": "Run SQL queries to verify stored test data."
+            },
+            {
+              "source_id": "SYNTH-SK-000919-02",
+              "company": "Synthetic test fixture",
+              "job_title": "Synthetic role-profile test data",
+              "source_date": "2026-10-12",
+              "text_excerpt": "Use SELECT queries to check application records."
+            }
+          ],
+          "required_proficiency_score": 0.4
+        }
+      ]
+    }
+  }
+}

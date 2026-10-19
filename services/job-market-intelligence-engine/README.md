@@ -1,0 +1,172 @@
+# Job Market Intelligence Engine (C01)
+
+Collects job advertisements from Sri Lankan job sites, responsibly, and works out which skills
+each job role demands in four sectors: **IT / Software, HR, Management and Agriculture**.
+
+**Status:** steps 1–6 of 8 done. Ads are collected from topjobs.lk, read with OCR, kept up to date
+by a sync, and turned into a skill demand profile per job role that the Market Pulse page shows.
+Also built: NER skill extraction (spaCy and JobBERT, trained on SkillSpan) and linking of skills to
+the Shared Skill Knowledge Service; both are off by default. Next: the topjobs test set for the NER
+comparison, the PostgreSQL loader and the scheduled daily sync. See [Progress](#progress).
+
+## Sources
+
+| Site | Collected? | Why |
+|---|---|---|
+| topjobs.lk | Yes | No robots.txt restrictions and no scraping clause in its terms |
+| xpress.jobs | No | Its terms prohibit scraping |
+| ikman.lk | No | Its terms forbid storing content without written permission |
+
+The site categories for each sector are in [`config/sector_mapping.yaml`](config/sector_mapping.yaml).
+
+## Responsible collection
+
+- robots.txt is checked before every request
+- a random 3–5 second wait between requests; stop on HTTP 403 or 429
+- an identifying User-Agent naming the project (`SkillBridge-Research-Bot`); a contact address
+  can be added with `SKILLBRIDGE_CONTACT`
+- no logins, CAPTCHAs or rate limits are bypassed
+- personal data (e-mails, phone numbers, contact names) is removed from processed data;
+  collected data (`data/`) is never committed
+
+## Structure
+
+```text
+job-market-intelligence-engine/
+├── app/
+│   ├── collectors/          collecting ads (scraper, sync, storage, deduplication, quality report)
+│   ├── processing/          analysis (OCR, job roles, skill demand, NER extractor, SSKS candidates)
+│   ├── integrations/        client for the Shared Skill Knowledge Service (SSKS)
+│   └── main.py              the Market Pulse API
+├── config/
+│   ├── sector_mapping.yaml  site categories → the four sectors
+│   ├── role_taxonomy.yaml   job titles → roles and seniority (editable)
+│   └── skills_lexicon.yaml  skills with their aliases (editable)
+├── scripts/sync.sh          sync with a log file
+├── tests/                   148 tests on saved pages and a fake SSKS; no live requests
+├── Dockerfile
+└── pyproject.toml
+```
+
+## Setup
+
+Requires Python 3.11+, and Tesseract for reading flyer images (`brew install tesseract`).
+
+```bash
+cd services/job-market-intelligence-engine
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+pytest
+```
+
+## Usage
+
+```bash
+python -m app.collectors.run --site topjobs --sector HR --limit 25   # collect new ads
+scripts/sync.sh                                                      # sync: statuses + new ads, logged
+python -m app.collectors.run --site topjobs --reparse                # offline: rebuild from data/raw/
+python -m app.processing.skills                                      # skill profile only
+```
+
+A sync (`scripts/sync.sh`, or `run --sync`) marks every stored ad **active**, **expired**
+(closing date passed) or **removed** (taken down early), and downloads new ads only. An ad counts
+as removed only if it is missing from both its category page and the topjobs homepage, which lists
+every live ad posted directly by an employer. Ads posted through recruitment agencies are not on
+the homepage, so they are never marked removed; they expire at their closing date. Ads are never
+deleted, so their history stays available.
+
+Outputs in `data/processed/`: the cleaned ads (`topjobs.jsonl`, `combined.csv`),
+`quality_report.md`, `sync_log.csv` (one row per sync), and the skill demand per job role
+(`skill_profile.md`, and `skill_profile.json` for the Market Pulse page). Sync logs are in
+`data/logs/`.
+
+## Skill extraction and SSKS
+
+| Setting | Values |
+|---|---|
+| `SKILLBRIDGE_SKILL_EXTRACTOR` | `lexicon` (default): the skill list in `config/skills_lexicon.yaml`. `ner`: a trained NER model (`ml/c01-skill-ner/`). `both`: the two combined. |
+| `SKILLBRIDGE_NER_MODEL` | the model folder, for `ner` and `both` (needs `pip install -e ".[ner]"` and Python 3.12) |
+| `SKILLBRIDGE_SSKS_URL` | the Shared Skill Knowledge Service, e.g. `http://localhost:8080/ssks`. Not set: no SSKS IDs. |
+
+- With SSKS, every skill mention is normalized (`POST /ssks/normalize/skills`, cached in
+  `processed/ssks_cache.json`) and stored with its raw text, SSKS ID and match type (exact, alias,
+  fuzzy, unmatched, pending) in `processed/ad_skills.jsonl`.
+- `lexicon` counts skills as before and adds their SSKS IDs. `ner` counts only skills SSKS matches
+  exactly or through a verified alias; the rest are listed as **unverified** (visible, not counted).
+- If SSKS is down, mentions stay "pending" and collection continues; they are looked up on the next run.
+- `python -m app.processing.ssks_candidates` lists skills SSKS doesn't know (unmatched, seen in 2+
+  ads) in `processed/ssks_candidates.csv`. Nothing is sent without `--submit`.
+
+The NER models, their training and the evaluation are in [`ml/c01-skill-ner/`](../../ml/c01-skill-ner/README.md).
+Measured so far ([evaluation report](../../ml/c01-skill-ner/reports/evaluation.md)):
+
+| On the SkillSpan test split (3,569 sentences) | Exact-span F1 | Partial-overlap F1 |
+|---|--:|--:|
+| Lexicon | 0.240 | 0.421 |
+| spaCy NER | 0.475 | 0.731 |
+| JobBERT NER | 0.573 | 0.871 |
+
+- SSKS (its seed: 1,842 skills) gives an ID to 66 of the 145 lexicon skills (46%), but matches
+  only 10–12% of the NER mentions exactly or by alias: NER often returns phrases ("communication
+  and teamwork skills") where SSKS has short names. That is why `lexicon` stays the default.
+- The comparison that matters, on hand-labelled topjobs ads, is still to be done (see below).
+
+## Market Pulse API
+
+The Market Pulse page gets its data from this service, through the API gateway:
+
+| Endpoint | Returns |
+|---|---|
+| `GET /jobs/health` | service status |
+| `GET /jobs/market-pulse` | skill demand per job role and sector, totals, and the job sites with their status |
+
+In Docker the service runs on port 8003 (`JOB_MARKET_INTELLIGENCE_PORT`) and is reached at
+http://localhost:8080/jobs/ (API docs at `/jobs/docs`). Docker Compose mounts only
+`data/processed/`, read-only: ads are collected on the host with the commands above, and a
+refresh of the page shows the new data.
+
+## Progress
+
+One branch per step (`Akalanka-Job-market-intelligence-engine/<step>`), merged into `main`
+before the next one starts.
+
+| # | Step | What it adds | Status |
+|--:|---|---|---|
+| 1 | `project-setup` | Folders, `pyproject.toml`, `.gitignore`, sector mapping | ✅ Done |
+| 2 | `web-scrapping` | Polite HTTP client, robots.txt, topjobs scraper, storage, deduplication, CLI | ✅ Done |
+| 3 | `data-quality-report` | Data quality report per sector | ✅ Done |
+| 4 | `ocr` | Text from flyer images (Tesseract), with personal data removed | ✅ Done |
+| 5 | `skill-profile` | Job roles, skills per role, the Market Pulse API and page | ✅ Done |
+| 6 | `scraper-sync` | Active / expired / removed ads, new ads only, sync log | ✅ Done |
+| – | `skill-ner` | NER skill extraction (spaCy, JobBERT) compared with the lexicon; SSKS IDs for skills; candidate proposals | 🔄 In progress: test set labelling |
+| 7 | `postgres-loader` | Load ads, statuses and skills into PostgreSQL | ⏳ Next |
+| 8 | `scheduled-sync` | Run the sync automatically every day | ⏳ To do |
+
+### Still to do
+
+- **First full sync:** `scripts/sync.sh` collects about 100 ads across the four sectors
+  (~15 minutes). Only 5 HR ads have been collected so far, so the Market Pulse percentages are
+  only indicative.
+- **Steps 7 and 8** in the table above.
+- **Dead skills on Market Pulse:** skills that ads ask for less and less. Needs a few weeks of
+  daily syncs first.
+- **Data improvements:** collect roles with no ads yet (e.g. Software Engineer), filter the
+  non-agriculture ads out of topjobs' Agriculture category (already flagged), and tune the skill
+  list on the larger sample.
+- **NER evaluation on topjobs:** once 100+ ads are collected, draw 100 test ads
+  (`ml/c01-skill-ner/src/export_label_studio.py`), label them by hand (`LABELLING.md`) and run
+  the evaluation: lexicon vs spaCy vs JobBERT on Sri Lankan ads. Then decide the extractor.
+- **SSKS:** the SSKS seed has to be loaded in Docker before skills can be linked there, and new
+  skills are proposed as candidates only after the SSKS owner agrees.
+
+### Known limitations
+
+- Only topjobs.lk is collected (see [Sources](#sources)).
+- Almost every topjobs ad is a flyer image, so skills depend on OCR. Badly designed or garbled
+  flyers give fewer or wrong skills, and only English text is read.
+- Skills are found by matching the skill list, so a skill missing from
+  `config/skills_lexicon.yaml` is not counted (unless the NER extractor is switched on).
+- Agency ads can't be confirmed as removed, so they stay active until their closing date.
+- Fewer than half of the lexicon skills, and few NER phrases, have an SSKS ID with the current
+  SSKS seed (no agriculture skills, few soft skills).
