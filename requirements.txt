@@ -11,3 +11,13 @@ asyncpg>=0.29.0
 pwdlib[argon2]>=0.2.0
 pyjwt>=2.8.0
 greenlet>=3.0.0
+python-dotenv>=1.0.0
+# Learning and interview services (run as processes by app.py)
+numpy>=1.26.4
+pgvector>=0.2.5
+onnxruntime>=1.20.0        # fine-tuned embedder, re-ranker and answer scorer (models/*/model.onnx)
+tokenizers>=0.20.0
+faster-whisper>=1.1.0      # STT_PROVIDER=local; loaded on first transcription
+pypdf>=5.0,<6.20           # CV upload parsing
+python-docx>=1.1,<2
+google-genai>=1.0.0        # only when LLM_PROVIDER / EMBEDDING_PROVIDER / STT_PROVIDER is gemini
