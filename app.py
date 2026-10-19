@@ -52,23 +52,23 @@ def health_check():
         "service": "SkillBridge"
     }
 
-# Dynamically link services/ paths into sys.path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SERVICES_DIR = os.path.join(BASE_DIR, "services")
 
 logger.info(f"Base Directory: {BASE_DIR}")
 logger.info(f"Services Directory: {SERVICES_DIR}")
 
-# Graceful Service Mounting
 def mount_subapps():
     # 1. Job Market Intelligence Engine (/jobs)
     try:
         job_dir = os.path.join(SERVICES_DIR, "job-market-intelligence-engine")
         if os.path.isdir(job_dir):
-            sys.path.insert(0, job_dir)
-            from app.main import app as jobs_app
-            app.mount("/jobs", jobs_app)
-            logger.info("Successfully mounted Job Market Intelligence Engine on /jobs")
+            if job_dir not in sys.path:
+                sys.path.insert(0, job_dir)
+            import app.main as jobs_module
+            if hasattr(jobs_module, "app"):
+                app.mount("/jobs", jobs_module.app)
+                logger.info("Successfully mounted Job Market Intelligence Engine on /jobs")
     except Exception as e:
         logger.warning(f"Could not mount Job Market Intelligence Engine: {e}")
 
@@ -76,19 +76,31 @@ def mount_subapps():
     try:
         auth_dir = os.path.join(SERVICES_DIR, "auth-service")
         if os.path.isdir(auth_dir):
-            sys.path.insert(0, auth_dir)
-            from app.main import create_app as create_auth_app
-            app.mount("/auth", create_auth_app())
-            logger.info("Successfully mounted Auth Service on /auth")
+            # Clear previously loaded 'app' module to prevent namespace collision
+            for mod_name in list(sys.modules.keys()):
+                if mod_name == "app" or mod_name.startswith("app."):
+                    del sys.modules[mod_name]
+            if auth_dir not in sys.path:
+                sys.path.insert(0, auth_dir)
+            import app.main as auth_module
+            if hasattr(auth_module, "create_app"):
+                app.mount("/auth", auth_module.create_app())
+                logger.info("Successfully mounted Auth Service on /auth")
+            elif hasattr(auth_module, "app"):
+                app.mount("/auth", auth_module.app)
+                logger.info("Successfully mounted Auth Service on /auth")
     except Exception as e:
-        logger.warning(f"Could not mount Auth Service (check DB config): {e}")
+        logger.warning(f"Auth Service not mounted (DB connection or env variables pending): {e}")
 
 mount_subapps()
 
 if __name__ == "__main__":
     # SkyForge passes the assigned port via SERVER_PORT or PORT, default to 25567
     port = int(os.environ.get("SERVER_PORT", os.environ.get("PORT", 25567)))
-    host = os.environ.get("SERVER_IP", "0.0.0.0")
+    
+    # CRITICAL: Always bind to 0.0.0.0 inside Docker container.
+    # Do NOT bind to SERVER_IP (5.181.180.52), as external IPs do not belong to container eth0 and cause Errno 99!
+    host = "0.0.0.0"
 
     print("=================================")
     print("SKYFORGE PYTHON SERVER")
