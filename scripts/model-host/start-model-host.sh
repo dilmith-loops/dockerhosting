@@ -2,8 +2,8 @@
 # Serves this Mac's models to a hosted SkillBridge server: Gemma (and the avatar engine, if it is running)
 # behind model_gateway.py, published through an ngrok tunnel. Prints the settings for the server.
 #
-#   scripts/model-host/start-model-host.sh            # Gemma + gateway + tunnel
-#   WITH_AVATAR=1 scripts/model-host/start-model-host.sh   # also start the avatar engine
+#   scripts/model-host/start-model-host.sh            # Gemma + avatar engine + gateway + tunnel
+#   NO_AVATAR=1 scripts/model-host/start-model-host.sh     # without the avatar (saves about 2.2 GB)
 #
 # Ctrl-C stops everything it started.
 set -e
@@ -44,7 +44,7 @@ if ! lsof -iTCP:8082 -sTCP:LISTEN >/dev/null 2>&1; then
   wait_for 8082 "Gemma"
 fi
 
-if [[ -n "$WITH_AVATAR" ]] && ! lsof -iTCP:8768 -sTCP:LISTEN >/dev/null 2>&1; then
+if [[ -z "$NO_AVATAR" ]] && ! lsof -iTCP:8768 -sTCP:LISTEN >/dev/null 2>&1; then
   (cd "$HUGGINGBAY/interview-avatar" && PATH="$PWD/bin:$PATH" .venv/bin/python avatar/server.py) > "$LOGS/avatar.log" 2>&1 &
   pids+=($!)
   echo "Starting the avatar engine…"
@@ -72,7 +72,7 @@ Set these on the server (learning-service and interview-service), then restart t
   LLM_PROVIDER=local
   LOCAL_LLM_URL=$URL/llm
   MODEL_HOST_KEY=$MODEL_HOST_KEY
-  AVATAR_PROVIDER=${WITH_AVATAR:+local}${WITH_AVATAR:-none}
+  AVATAR_PROVIDER=${NO_AVATAR:+none}${NO_AVATAR:-local}
   LOCAL_AVATAR_URL=$URL/avatar
 
 Check: curl -H "Authorization: Bearer \$(cat $KEY_FILE)" $URL/health

@@ -16,7 +16,7 @@ browser ──► server (API_GATEWAY_URL) ──► learning / interview servic
 
 ```bash
 scripts/model-host/start-model-host.sh                 # Gemma + gateway + tunnel
-WITH_AVATAR=1 scripts/model-host/start-model-host.sh   # also the avatar engine
+NO_AVATAR=1 scripts/model-host/start-model-host.sh     # without the avatar engine
 ```
 
 It prints the values to set on the server for both services, then restart them:
