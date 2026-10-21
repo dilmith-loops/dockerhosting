@@ -205,7 +205,7 @@ export default function InterviewSetup({ candidateName, onStart }: InterviewSetu
             >
               {roles.map((r) => (
                 <option key={r.role} value={r.role}>
-                  {r.role} ({r.questions} questions){profile?.suggested_role === r.role ? " · suggested" : ""}
+                  {r.role}{profile?.suggested_role === r.role ? " · suggested" : ""}
                 </option>
               ))}
             </select>
@@ -219,7 +219,7 @@ export default function InterviewSetup({ candidateName, onStart }: InterviewSetu
             >
               {LEVELS.map((l) => (
                 <option key={l} value={l}>
-                  {l}{roleInfo ? ` (${roleInfo.levels[l] ?? 0} questions)` : ""}
+                  {l}
                 </option>
               ))}
             </select>
