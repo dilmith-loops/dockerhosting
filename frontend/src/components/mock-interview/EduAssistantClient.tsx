@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import PersonalizedLearningView from "./PersonalizedLearningView";
 import { ragApi } from "@/lib/ragApi";
+import SearchSelect from "./SearchSelect";
 
 interface EduAssistantClientProps {
   studentId: string;
@@ -29,19 +30,14 @@ export default function EduAssistantClient({ studentId, studentName }: EduAssist
         <label htmlFor="edu-role" className="text-sm font-bold text-ink">
           Learning for
         </label>
-        <select
-          id="edu-role"
+        <SearchSelect
+          inputId="edu-role"
+          className="min-w-64"
           value={role}
-          onChange={(e) => setRole(e.target.value)}
-          className="border-2 border-ink bg-white px-3 py-2 text-sm font-bold text-ink shadow-[2px_2px_0_var(--color-ink)] focus:outline-none"
-        >
-          <option value="">All roles</option>
-          {roles.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
+          onChange={setRole}
+          placeholder="Search roles…"
+          options={[{ value: "", label: "All roles" }, ...roles.map((r) => ({ value: r, label: r }))]}
+        />
         <span className="text-xs text-muted">Topic suggestions follow the role you pick.</span>
       </div>
 

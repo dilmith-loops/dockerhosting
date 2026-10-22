@@ -5,6 +5,7 @@ import { Send, RefreshCw, Sparkles, GraduationCap, AlertTriangle, Bookmark, Chec
 import SimpleMarkdown from "./SimpleMarkdown";
 import { LessonCard, QuizCard, BloomChip, LEVELS, levelLabel } from "./SkillaroLesson";
 import { ragApi, type EduChatMessage, type EduLesson, type LessonLevel, type LearningTopic, type SourceCitation } from "@/lib/ragApi";
+import SearchSelect from "./SearchSelect";
 
 interface PersonalizedLearningViewProps {
   studentId: string;
@@ -406,20 +407,15 @@ export default function PersonalizedLearningView({
               <label htmlFor="skillaro-topic" className="flex items-center gap-2 font-condensed text-base font-bold uppercase tracking-wider text-ink">
                 <BookOpen className="size-4" /> All topics ({suggestedTopics.length})
               </label>
-              <select
-                id="skillaro-topic"
-                value=""
-                onChange={(e) => e.target.value && teach(e.target.value)}
+              {/* A picker, not a setting: it starts each lesson and shows the placeholder again */}
+              <SearchSelect
+                inputId="skillaro-topic"
+                value={null}
+                onChange={(topic) => teach(topic)}
                 disabled={!!busy}
-                className="w-full border-2 border-ink bg-white px-2 py-2 text-sm font-bold text-ink focus:outline-none"
-              >
-                <option value="">Choose a topic to learn…</option>
-                {suggestedTopics.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+                placeholder="Search or choose a topic to learn…"
+                options={suggestedTopics.map((t) => ({ value: t, label: t }))}
+              />
             </div>
           )}
 
